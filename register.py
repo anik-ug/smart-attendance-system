@@ -1,6 +1,5 @@
-"""Register a new user: capture face samples from webcam and save the averaged encoding."""
-import os
-
+"""Register a new user: capture face samples and store ONLY the encrypted
+face vector (no photo is ever written to disk)."""
 import cv2
 import face_recognition
 import numpy as np
@@ -11,14 +10,18 @@ SAMPLES_NEEDED = 5
 
 
 def register_user():
+    print("PRIVACY NOTICE: only an encrypted numerical face vector is stored.")
+    print("No photo is saved. Data stays on this machine.")
+    consent = input("Do you give consent to store your face vector? (y/n): ")
+    if consent.strip().lower() != "y":
+        print("Consent not given. Registration cancelled.")
+        return
+
     name = input("Enter name: ").strip()
     roll_no = input("Enter roll no / ID: ").strip()
     if not name or not roll_no:
         print("Name and roll no are required.")
         return
-
-    save_dir = os.path.join("dataset", roll_no)
-    os.makedirs(save_dir, exist_ok=True)
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -49,7 +52,6 @@ def register_user():
                 continue
             enc = face_recognition.face_encodings(rgb, locations)[0]
             encodings.append(enc)
-            cv2.imwrite(os.path.join(save_dir, f"{len(encodings)}.jpg"), frame)
             print(f"Sample {len(encodings)} captured.")
 
     cap.release()
@@ -61,7 +63,7 @@ def register_user():
 
     mean_encoding = np.mean(encodings, axis=0)
     if add_user(name, roll_no, mean_encoding):
-        print(f"User '{name}' ({roll_no}) registered successfully.")
+        print(f"User '{name}' ({roll_no}) registered. Encrypted vector stored, no photo saved.")
     else:
         print(f"Roll no '{roll_no}' already exists.")
 

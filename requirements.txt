@@ -3,3 +3,4 @@ face_recognition
 numpy
 flask
 pandas
+cryptography

@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 
 import numpy as np
-
+from crypto_utils import decrypt_vector, encrypt_vector
 DB_NAME = "attendance.db"
 
 
@@ -39,7 +39,7 @@ def add_user(name, roll_no, encoding):
         with get_conn() as conn:
             conn.execute(
                 "INSERT INTO users (name, roll_no, encoding) VALUES (?, ?, ?)",
-                (name, roll_no, np.asarray(encoding, dtype=np.float64).tobytes()),
+                (name, roll_no, encrypt_vector(encoding)),
             )
         return True
     except sqlite3.IntegrityError:
@@ -50,7 +50,7 @@ def get_all_users():
     """Returns list of (id, name, roll_no, encoding_array)."""
     with get_conn() as conn:
         rows = conn.execute("SELECT id, name, roll_no, encoding FROM users").fetchall()
-    return [(r[0], r[1], r[2], np.frombuffer(r[3], dtype=np.float64)) for r in rows]
+    return [(r[0], r[1], r[2], decrypt_vector(r[3])) for r in rows]
 
 
 def get_users_list():
